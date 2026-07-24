@@ -1,0 +1,253 @@
+{
+  "description": "Golden STE vs Non-STE example pairs for regression tests. Unofficial — not affiliated with ASD. Some pairs adapted from ASD-STE100 Issue 9 writing-rule examples; others hand-crafted for Tier-1 / Tier-2 / Tier-3 coverage.",
+  "pairs": [
+    {
+      "id": "vocab-utilize",
+      "non_ste": "Utilize the approved procedure.",
+      "ste": "Use the approved procedure.",
+      "expected_rule_ids": ["STE-VOCAB-UNAPPROVED"],
+      "notes": "utilize is unapproved; use is approved (1:1 safe fix)."
+    },
+    {
+      "id": "vocab-commence",
+      "non_ste": "Commence the test.",
+      "ste": "Start the test.",
+      "expected_rule_ids": ["STE-VOCAB-UNAPPROVED"],
+      "notes": "commence → start (single alternative)."
+    },
+    {
+      "id": "vocab-abandon-multi-alt",
+      "non_ste": "Abandon the procedure.",
+      "ste": "Stop the procedure.",
+      "expected_rule_ids": ["STE-VOCAB-UNAPPROVED"],
+      "notes": "abandon has multiple alternatives; not a safe auto-fix."
+    },
+    {
+      "id": "vocab-function-words",
+      "non_ste": null,
+      "ste": "Close the valve.",
+      "expected_rule_ids": [],
+      "notes": "Approved STE sentence; function words and seeded technical noun valve."
+    },
+    {
+      "id": "vocab-approximately-issue9",
+      "non_ste": null,
+      "ste": "Drain approximately 2 liters of fuel.",
+      "expected_rule_ids": [],
+      "notes": "In Issue 9, approximately is an approved adverb."
+    },
+    {
+      "id": "sentence-length-procedure",
+      "non_ste": "Remove the cover and then carefully inspect each of the internal components for any signs of damage before you continue with work.",
+      "ste": "Remove the cover. Inspect the components for damage.",
+      "expected_rule_ids": ["STE-SENTENCE-LENGTH"],
+      "text_type": "procedure",
+      "notes": "Procedural sentences max 20 words."
+    },
+    {
+      "id": "sentence-length-description",
+      "non_ste": "The system gives a clear indication of the pressure value when the operator starts the secondary pump during the daily check sequence on the ground and also records the result in the log.",
+      "ste": "The system shows the pressure when you start the secondary pump.",
+      "expected_rule_ids": ["STE-SENTENCE-LENGTH"],
+      "text_type": "description",
+      "notes": "Descriptive sentences max 25 words."
+    },
+    {
+      "id": "one-instruction",
+      "non_ste": "Remove the cover and clean the surface.",
+      "ste": "1. Remove the cover.\n2. Clean the surface.",
+      "expected_rule_ids": ["STE-ONE-INSTRUCTION"],
+      "text_type": "procedure",
+      "notes": "One instruction per procedural sentence."
+    },
+    {
+      "id": "units-glued",
+      "non_ste": "Set the clearance to 10mm.",
+      "ste": "Set the clearance to 10 mm.",
+      "expected_rule_ids": ["STE-UNITS-FORMAT"],
+      "notes": "Prefer a space between number and unit."
+    },
+    {
+      "id": "glossary-technical-noun",
+      "non_ste": null,
+      "ste": "Make sure that the valve can operate.",
+      "expected_rule_ids": [],
+      "notes": "Adapted from Issue 9 STE example; valve is a technical noun."
+    },
+    {
+      "id": "pdf-leak-test",
+      "non_ste": "Test the system for leaks.",
+      "ste": "Do the leak test of the system.",
+      "expected_rule_ids": ["STE-VOCAB-UNAPPROVED"],
+      "notes": "Adapted from Issue 9; 'test' as verb is unapproved."
+    },
+    {
+      "id": "pdf-operable",
+      "non_ste": "Make sure that the valve is operable.",
+      "ste": "Make sure that the valve can operate.",
+      "expected_rule_ids": ["STE-VOCAB-UNAPPROVED"],
+      "notes": "Adapted from Issue 9 writing rules."
+    },
+    {
+      "id": "pdf-enter",
+      "non_ste": "Do not enter the engine test area without approval.",
+      "ste": "Do not go into the engine test area without approval.",
+      "expected_rule_ids": ["STE-VOCAB-UNAPPROVED"],
+      "notes": "Adapted from Issue 9; enter unapproved in this sense."
+    },
+    {
+      "id": "pdf-detect",
+      "non_ste": "If you detect broken wires, repair them.",
+      "ste": "If you find broken wires, repair them.",
+      "expected_rule_ids": ["STE-VOCAB-UNAPPROVED"],
+      "notes": "Adapted from Issue 9; detect unapproved."
+    },
+    {
+      "id": "pdf-passive-adjust",
+      "non_ste": "1. The temperature must be adjusted.",
+      "ste": "1. Adjust the temperature.",
+      "expected_rule_ids": ["STE-PASSIVE", "STE-VERB-FORM", "STE-IMPERATIVE"],
+      "text_type": "procedure",
+      "notes": "Tier-2: modal passive in a numbered procedural step."
+    },
+    {
+      "id": "syntax-passive-agent",
+      "non_ste": "1. The valve is closed by the operator.",
+      "ste": "1. Close the valve.",
+      "expected_rule_ids": ["STE-PASSIVE", "STE-IMPERATIVE"],
+      "text_type": "procedure",
+      "notes": "Verbal passive with agent in a numbered step (Rule 3.6)."
+    },
+    {
+      "id": "syntax-imperative-ok",
+      "non_ste": null,
+      "ste": "1. Close the valve.",
+      "expected_rule_ids": [],
+      "text_type": "procedure",
+      "notes": "Imperative-compliant procedural step."
+    },
+    {
+      "id": "syntax-progressive",
+      "non_ste": "The operator is adjusting the linkage.",
+      "ste": "The operator adjusts the linkage.",
+      "expected_rule_ids": ["STE-VERB-FORM"],
+      "text_type": "description",
+      "notes": "Progressive main verb is not an approved STE tense (Rule 3.2)."
+    },
+    {
+      "id": "syntax-perfect",
+      "non_ste": "The operator has closed the valve.",
+      "ste": "The operator closed the valve.",
+      "expected_rule_ids": ["STE-VERB-FORM"],
+      "text_type": "description",
+      "notes": "Present perfect is not approved (Rule 3.4)."
+    },
+    {
+      "id": "syntax-noun-cluster",
+      "non_ste": "Remove the fuel pump inlet pressure sensor.",
+      "ste": "Remove the fuel pump sensor.",
+      "expected_rule_ids": ["STE-NOUN-CLUSTER"],
+      "text_type": "procedure",
+      "notes": "Multi-word noun longer than three words (Rule 2.1)."
+    },
+    {
+      "id": "syntax-noun-cluster-ok",
+      "non_ste": null,
+      "ste": "Remove the fuel pump pressure.",
+      "expected_rule_ids": [],
+      "text_type": "procedure",
+      "notes": "Three-word multi-word noun is allowed."
+    },
+    {
+      "id": "syntax-adjective-participle",
+      "non_ste": null,
+      "ste": "1. Examine all parts of the disassembled unit for damage.",
+      "expected_rule_ids": [],
+      "text_type": "procedure",
+      "notes": "Past participle as adjective (Rule 3.3) must not raise STE-PASSIVE."
+    },
+    {
+      "id": "pdf-grease-verb",
+      "non_ste": "Grease the fasteners.",
+      "ste": "Apply grease to the fasteners.",
+      "expected_rule_ids": ["STE-VOCAB-UNAPPROVED"],
+      "notes": "Grease as verb unapproved; grease as technical noun OK."
+    },
+    {
+      "id": "safe-fix-utilize",
+      "non_ste": "Utilize this tool.",
+      "ste": "Use this tool.",
+      "expected_rule_ids": ["STE-VOCAB-UNAPPROVED"],
+      "notes": "Safe-fix candidate: utilize → use."
+    },
+    {
+      "id": "compliant-short",
+      "non_ste": null,
+      "ste": "Do this procedure.",
+      "expected_rule_ids": [],
+      "notes": "Fully approved short STE sentence."
+    },
+    {
+      "id": "compliant-system-safe",
+      "non_ste": null,
+      "ste": "Make sure the system is safe.",
+      "expected_rule_ids": [],
+      "notes": "Approved STE sentence with closed-class words."
+    },
+    {
+      "id": "units-spaced-ok",
+      "non_ste": null,
+      "ste": "Put the clearance to 10 mm.",
+      "expected_rule_ids": [],
+      "notes": "Correctly spaced unit should not raise STE-UNITS-FORMAT."
+    },
+    {
+      "id": "semantic-pronoun-ambig",
+      "non_ste": "Remove the panel from the unit. It is damaged.",
+      "ste": "Remove the panel from the unit. The panel is damaged.",
+      "expected_rule_ids": ["STE-PRONOUN-AMBIG"],
+      "text_type": "description",
+      "notes": "Ambiguous 'it' with multiple same-number noun candidates (Tier-3 WARNING)."
+    },
+    {
+      "id": "semantic-pronoun-clear",
+      "non_ste": null,
+      "ste": "The pump supplies pressure. It also supplies fluid.",
+      "expected_rule_ids": [],
+      "text_type": "description",
+      "notes": "Clear singular subject antecedent; STE-PRONOUN-AMBIG must not fire."
+    },
+    {
+      "id": "semantic-topic-weak",
+      "non_ste": "It supplies pressure to the system.",
+      "ste": "The pump supplies pressure to the system.",
+      "expected_rule_ids": ["STE-TOPIC-SENTENCE", "STE-PRONOUN-AMBIG"],
+      "text_type": "description",
+      "notes": "Weak description opener (pronoun start); topic rule is description-only."
+    },
+    {
+      "id": "semantic-topic-ok",
+      "non_ste": null,
+      "ste": "The pump supplies pressure to the system.",
+      "expected_rule_ids": [],
+      "text_type": "description",
+      "notes": "Clear topic noun in the first sentence."
+    },
+    {
+      "id": "semantic-pos-noun-as-verb",
+      "non_ste": "Check the pressure.",
+      "ste": "Do a check of the pressure.",
+      "expected_rule_ids": ["STE-POS-MISMATCH"],
+      "text_type": "procedure",
+      "notes": "Approved noun 'check' used as verb → high-confidence POS ERROR."
+    },
+    {
+      "id": "semantic-pos-ok-verb",
+      "non_ste": null,
+      "ste": "Close the valve.",
+      "expected_rule_ids": [],
+      "text_type": "procedure",
+      "notes": "Approved verb used as verb; no STE-POS-MISMATCH."
+    }
+  ]
+}
