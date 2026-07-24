@@ -12,12 +12,58 @@ engine.
 
 ## Install
 
+### Consumers (recommended)
+
 ```bash
-pip install -e .
-python -m spacy download en_core_web_sm
+# One-time spaCy model in the environment that will run the checker
+uvx --from asd-ste100-checker ste100 setup
+# equivalent: python -m ste100 setup   (after pip install)
 ```
 
+Then point Cursor at `uvx` (see [`.cursor/mcp.json.example`](.cursor/mcp.json.example)):
 
+```json
+{
+  "mcpServers": {
+    "ste100": {
+      "command": "uvx",
+      "args": ["--from", "asd-ste100-checker", "ste100", "serve"],
+      "env": {
+        "STE100_SPACY_MODEL": "en_core_web_sm",
+        "STE100_WORKSPACE": "/absolute/path/to/your/project"
+      }
+    }
+  }
+}
+```
+
+Or with a local venv: `"command": "python", "args": ["-m", "ste100", "serve"]`.
+
+`ste100 doctor` is **check-only** (no network). `ste100 setup` / `ste100 doctor --fix`
+may download the configured spaCy model.
+
+### Developers (editable)
+
+```bash
+pip install -e ".[dev]"
+python -m ste100 setup
+```
+
+### Docker (HTTP MCP)
+
+Minimal image: package + baked `en_core_web_sm`, listens on `0.0.0.0:8765`.
+Requires `STE100_MCP_TOKEN` at runtime. Text/payload tools work; host git /
+relative filesystem checks are not the Docker story.
+
+```bash
+docker pull ghcr.io/sourdough-bread/asd-ste100-checker:latest
+docker run --rm -e STE100_MCP_TOKEN='replace-me' -p 8765:8765 \
+  ghcr.io/sourdough-bread/asd-ste100-checker:latest
+```
+
+Images and PyPI packages publish on tagged releases (`v*`) once OIDC trusted
+publishing (PyPI) and GHCR permissions are configured. This repo does not push
+tags for you — create a GitHub release / push a `v*` tag when ready.
 
 ### spaCy model
 
@@ -26,10 +72,18 @@ Default model: `en_core_web_sm`.
 Override with either:
 
 - Environment: `STE100_SPACY_MODEL=en_core_web_md` (also used by the MCP server
-— set it **before** `ste100 serve`; check tools do not take a model param)
+  — set it **before** `ste100 serve`; check tools do not take a model param)
 - CLI: `ste100 check --spacy-model en_core_web_md path/to/manual.txt`
 
+`serve` **eagerly** loads the model at startup and exits with a setup hint if it
+is missing (no runtime auto-download inside MCP tool calls).
+
 CI and the default install stay on `en_core_web_sm`.
+
+### Path resolution (MCP)
+
+- **Absolute** paths are used as-is (`ste_check_file`, glossary args).
+- **Relative** paths require `STE100_WORKSPACE` (absolute workspace root).
 
 ## Quickstart
 
@@ -38,6 +92,12 @@ CI and the default install stay on `en_core_web_sm`.
 ### CLI
 
 ```bash
+# Environment check (no network)
+ste100 doctor
+
+# Install spaCy model if missing
+ste100 setup
+
 # Check a file (JSON output by default)
 ste100 check path/to/manual.txt
 
@@ -62,6 +122,8 @@ cat manual.txt | ste100 check -
 
 ### MCP server (stdio)
 
+Prefer `uvx` as above, or:
+
 ```json
 {
   "mcpServers": {
@@ -69,7 +131,8 @@ cat manual.txt | ste100 check -
       "command": "ste100",
       "args": ["serve"],
       "env": {
-        "STE100_SPACY_MODEL": "en_core_web_sm"
+        "STE100_SPACY_MODEL": "en_core_web_sm",
+        "STE100_WORKSPACE": "/absolute/path/to/your/project"
       }
     }
   }
@@ -219,8 +282,11 @@ Editor             ->  LSP (stdio)       ->  deterministic engine
 
 ## Packaging
 
-Installable via setuptools (`pip install -e .`). Metadata/classifiers are set for
-PyPI readiness; publishing is optional and not required for agent use.
+Installable via setuptools (`pip install` / `uvx asd-ste100-checker`). Metadata
+is PyPI-ready. Tagged releases (`v*`) publish the wheel/sdist to PyPI (OIDC
+trusted publisher preferred) and the Docker image to
+`ghcr.io/sourdough-bread/asd-ste100-checker`. Configure the PyPI trusted
+publisher for this GitHub repo before the first tag, or set `PYPI_API_TOKEN`.
 
 ## License
 

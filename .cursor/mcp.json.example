@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "ste100": {
+      "command": "uvx",
+      "args": ["--from", "asd-ste100-checker", "ste100", "serve"],
+      "env": {
+        "STE100_SPACY_MODEL": "en_core_web_sm",
+        "STE100_WORKSPACE": "/absolute/path/to/your/project"
+      }
+    }
+  }
+}
