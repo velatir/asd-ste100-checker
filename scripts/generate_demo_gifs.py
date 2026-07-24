@@ -170,81 +170,78 @@ def build_cli_frames() -> list[Image.Image]:
 
 
 def build_agent_frames() -> list[Image.Image]:
+    """Simulate how an LLM agent drives MCP tools on the fixture text."""
     before = _load_json("before-summary.json")
     after = _load_json("after-summary.json")
     samples = _load_json("before-samples.json")
+    before_text = (FIX / "before.txt").read_text(encoding="utf-8").strip()
+    after_text = (FIX / "after.txt").read_text(encoding="utf-8").strip()
 
     frames: list[Image.Image] = []
+    scroll: list[tuple[str, tuple[int, int, int]]] = []
 
-    def play(
-        header: list[tuple[str, tuple[int, int, int]]],
-        call: str,
-        responses: list[tuple[str, tuple[int, int, int]]],
-        *,
-        hold_end: float = 1.0,
-    ) -> None:
-        lines = list(header)
-        frames.extend(_hold(_draw_lines(lines), 0.4))
-        step = max(1, len(call) // 18)
+    def paint(extra: list[tuple[str, tuple[int, int, int]]] | None = None) -> Image.Image:
+        return _draw_lines(scroll + (extra or []), y0=44)
+
+    def hold(seconds: float) -> None:
+        frames.extend(_hold(paint(), seconds))
+
+    def add(line: str, color: tuple[int, int, int] = FG, *, pause: float = 0.12) -> None:
+        scroll.append((line, color))
+        while len(scroll) > 17:
+            scroll.pop(0)
+        hold(pause)
+
+    def type_tool(call: str) -> None:
+        step = max(2, len(call) // 14)
         for i in range(0, len(call) + 1, step):
-            frames.append(_draw_lines(lines + [(call[:i] + "█", PROMPT)]))
-        lines.append((call, PROMPT))
-        frames.extend(_hold(_draw_lines(lines), 0.3))
-        for resp in responses:
-            lines.append(resp)
-            frames.extend(_hold(_draw_lines(lines), 0.3))
-        frames.extend(_hold(_draw_lines(lines), hold_end))
+            frames.append(paint([(call[:i] + "█", PROMPT)]))
+        add(call, PROMPT, pause=0.2)
 
-    common_header: list[tuple[str, tuple[int, int, int]]] = [
-        ("# Agent tool loop (MCP) — Cursor UI capture can replace later", MUTED),
-        ("", FG),
-    ]
+    # Scene 1 — real example text
+    add("# MCP agent loop · deploy-docs example", MUTED, pause=0.3)
+    add("user: check + rewrite this procedure for STE", MUTED, pause=0.25)
+    add('text = """', MUTED, pause=0.08)
+    for chunk in _wrap(before_text, max_chars=88):
+        add(chunk, FG, pause=0.06)
+    add('"""', MUTED, pause=0.35)
 
-    play(
-        common_header,
-        '→ ste_check_text(text=BEFORE, text_type="procedure")',
-        [
-            (f"← {{compliant: false, findings: {before['summary']['total']}}}", ERR),
-            ("   STE-VOCAB-UNAPPROVED · STE-SENTENCE-LENGTH · STE-PASSIVE", CHIP_FG),
-            (f"   e.g. {samples[0]['rule_id']}: 54 words (max 20)", MUTED),
-        ],
-        hold_end=1.2,
+    # Scene 2 — ste_check_text
+    type_tool('tool → ste_check_text(text, text_type="procedure")')
+    add(
+        f"← compliant: false · {before['summary']['total']} findings "
+        f"({before['summary']['error']}e/{before['summary']['warning']}w)",
+        ERR,
+        pause=0.2,
     )
-    play(
-        common_header,
-        "→ ste_suggest_rewrite(text=BEFORE, findings=[…])",
-        [
-            ("← rewrite brief (no LLM API in MCP):", FG),
-            ("   • Split into short imperative steps", OK),
-            ("   • Prefer active voice; drop filler", OK),
-            ("   • One instruction per step", OK),
-        ],
-        hold_end=1.2,
+    for s in samples:
+        sev = ERR if s["severity"] == "error" else (180, 100, 20)
+        add(f"  [{s['severity']}] {s['rule_id']}: {s['message'][:58]}", sev, pause=0.15)
+    hold(0.7)
+
+    # Scene 3 — ste_suggest_rewrite
+    type_tool('tool → ste_suggest_rewrite(text, text_type="procedure")')
+    add("← rewrite brief (no LLM API in MCP)", FG, pause=0.15)
+    add("  · split long sentences · one instruction each · active voice", MUTED, pause=0.15)
+    add("  · STE-SENTENCE-LENGTH (54>20) · VOCAB · PASSIVE", CHIP_FG, pause=0.35)
+
+    # Scene 4 — host LLM rewrite
+    add("agent: apply brief → rewrite", PROMPT, pause=0.25)
+    for line in after_text.splitlines():
+        add(f"  {line}", FG, pause=0.14)
+    hold(0.55)
+
+    # Scene 5 — recheck
+    type_tool('tool → ste_check_text(rewrite, text_type="procedure")')
+    add(
+        f"← compliant: false · {after['summary']['total']} findings "
+        f"(vocab without glossary)",
+        MUTED,
+        pause=0.2,
     )
-    play(
-        common_header,
-        "→ agent applies brief → AFTER",
-        [
-            ("   Deploy the app with a container image.", FG),
-            ("   1. Build the image in CI.", FG),
-            ("   2. Push the image to the registry.", FG),
-            ("   3. Configure the app to pull that image.", FG),
-            ("   4. Do not install packages when the app starts.", FG),
-        ],
-        hold_end=1.4,
-    )
-    play(
-        common_header,
-        '→ ste_check_text(text=AFTER, text_type="procedure")',
-        [
-            (f"← {{compliant: false, findings: {after['summary']['total']}}}", MUTED),
-            ("   rules: STE-VOCAB-UNAPPROVED only", OK),
-            ("   STE-SENTENCE-LENGTH / STE-PASSIVE cleared", OK),
-            ("", FG),
-            ("loop complete · structure fixed · glossary optional for vocab", OK),
-        ],
-        hold_end=2.2,
-    )
+    add("  cleared: SENTENCE-LENGTH · PASSIVE · ONE-INSTRUCTION", OK, pause=0.2)
+    add("  remaining: STE-VOCAB-UNAPPROVED", MUTED, pause=0.2)
+    add("done: structure fixed · recheck ok · glossary optional", OK, pause=1.4)
     return frames
 
 
