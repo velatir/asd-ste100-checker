@@ -24,6 +24,9 @@ _PLURAL_PRONOUNS = frozenset({"these", "those", "they"})
 _TARGET_PRONOUNS = _SINGULAR_PRONOUNS | _PLURAL_PRONOUNS
 
 _COORD_STARTERS = frozenset({"and", "but", "or", "nor", "yet", "so"})
+_DUMMY_IT_PREDICATES = frozenset(
+    {"important", "necessary", "essential", "recommended"}
+)
 _META_OPENERS = frozenset(
     {
         "note",
@@ -179,6 +182,13 @@ def check_pronoun_ambiguity(doc: Doc, context: AnalysisContext) -> list[Finding]
             if token.dep_ not in {"nsubj", "nsubjpass", "expl", "dobj", "pobj", "attr"}:
                 continue
 
+            # Expletive / "It is important…" — topic rule handles this.
+            if key == "it" and (
+                token.dep_ == "expl"
+                or any(t.lemma_.lower() in _DUMMY_IT_PREDICATES for t in sent)
+            ):
+                continue
+
             plural = _pronoun_number(key)
             if plural is None:
                 continue
@@ -278,16 +288,20 @@ def _is_meta_comment_without_topic(sent: Span) -> bool:
 
     # "It is important / necessary / recommended ..."
     if surface == "it" and len(tokens) >= 2:
-        if any(t.lemma_.lower() in {"important", "necessary", "essential", "recommended"} for t in tokens[:6]):
+        if any(t.lemma_.lower() in _DUMMY_IT_PREDICATES for t in tokens[:6]):
             return True
 
     # "Note that...", "Remember that...", "Warning: ..."
     if first_l in _META_OPENERS or surface in _META_OPENERS:
-        has_topic_nsubj = any(
-            t.dep_ in {"nsubj", "nsubjpass"} and t.pos_ in {"NOUN", "PROPN"} for t in sent
-        )
-        if not has_topic_nsubj:
-            return True
+        # ALL-CAPS WARNING/CAUTION labels glued to the next line by spaCy.
+        if first.text.isupper() and any(
+            t.dep_ in {"nsubj", "nsubjpass"}
+            and t.pos_ in {"NOUN", "PROPN"}
+            and t.i > first.i
+            for t in sent
+        ):
+            return False
+        return True
 
     # "This section / chapter / paragraph ..."
     if surface in {"this", "these"} and len(tokens) >= 2:

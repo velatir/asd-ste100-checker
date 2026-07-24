@@ -117,6 +117,39 @@ def _normalize_key(word: str) -> str:
     return word.strip().lower()
 
 
+def _morphology_keys(word: str) -> list[str]:
+    """Surface form plus simple lemma-ish fallbacks (utilizes → utilize)."""
+    key = _normalize_key(word)
+    if not key:
+        return []
+    keys = [key]
+    if key.endswith("ies") and len(key) > 4:
+        keys.append(key[:-3] + "y")
+    elif key.endswith("es") and len(key) > 3:
+        keys.append(key[:-2])
+        keys.append(key[:-1])
+    elif key.endswith("s") and len(key) > 2 and not key.endswith("ss"):
+        keys.append(key[:-1])
+    if key.endswith("ied") and len(key) > 4:
+        keys.append(key[:-3] + "y")
+    elif key.endswith("ed") and len(key) > 3:
+        keys.append(key[:-2])
+        keys.append(key[:-1])
+    if key.endswith("ying") and len(key) > 5:
+        keys.append(key[:-3] + "y")
+    elif key.endswith("ing") and len(key) > 4:
+        keys.append(key[:-3])
+        if len(key) > 5 and key[-4] == key[-5]:
+            keys.append(key[:-4])
+    seen: set[str] = set()
+    out: list[str] = []
+    for candidate in keys:
+        if candidate and candidate not in seen:
+            seen.add(candidate)
+            out.append(candidate)
+    return out
+
+
 def _load_json(path: Path) -> dict[str, Any]:
     with path.open(encoding="utf-8") as fh:
         data = json.load(fh)
@@ -273,7 +306,11 @@ class DictionaryEngine:
         self.ensure_loaded()
         if is_non_vocabulary_token(word):
             return None
-        return self._index.get(_normalize_key(word))
+        for key in _morphology_keys(word):
+            record = self._index.get(key)
+            if record is not None:
+                return record
+        return None
 
     def lookup_payload(self, word: str) -> dict[str, Any]:
         """CLI/MCP-shaped dictionary lookup payload."""
@@ -309,15 +346,17 @@ class DictionaryEngine:
     def suggest_alternatives(self, word: str) -> list[str]:
         """Return approved alternatives / preferred terms for a word."""
         self.ensure_loaded()
-        key = _normalize_key(word)
         suggestions: list[str] = []
-        if key in self.preferred_terms:
-            suggestions.append(self.preferred_terms[key])
-        record = self._index.get(key)
-        if record is not None:
-            for alt in record.alternatives:
-                if alt not in suggestions:
-                    suggestions.append(alt)
+        for key in _morphology_keys(word):
+            if key in self.preferred_terms:
+                preferred = self.preferred_terms[key]
+                if preferred not in suggestions:
+                    suggestions.append(preferred)
+            record = self._index.get(key)
+            if record is not None:
+                for alt in record.alternatives:
+                    if alt not in suggestions:
+                        suggestions.append(alt)
         return suggestions
 
     def merge_glossary(self, path: str | Path) -> Glossary:

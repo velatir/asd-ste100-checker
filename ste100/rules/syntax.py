@@ -43,6 +43,7 @@ _DEGREE_ADVERBS = frozenset(
 )
 _BE_LEMMAS = frozenset({"be", "am", "is", "are", "was", "were", "been", "being"})
 _HAVE_LEMMAS = frozenset({"have", "has", "had"})
+_LABEL_SUBJ = frozenset({"step", "item", "section", "figure", "note", "table"})
 
 
 def _line_prefix(text: str, sent: Span) -> str:
@@ -236,22 +237,35 @@ def _is_imperative_sentence(sent: Span) -> bool:
     if not tokens:
         return False
     root = sent.root
-    # "Do not open..." / "Do the test..."
-    if root.pos_ == "VERB" and root.tag_ in {"VB", "VBP"}:
-        nsubj = [
-            t
-            for t in sent
-            if t.dep_ in {"nsubj", "nsubjpass"} and t.head.i == root.i
-        ]
-        if not nsubj:
+
+    def _has_subject(verb: Token) -> bool:
+        for t in sent:
+            if t.dep_ not in {"nsubj", "nsubjpass"} or t.head.i != verb.i:
+                continue
+            # Ignore "Step 1:" / list markers mis-tagged as nsubj.
+            if t.text.lower() in _LABEL_SUBJ or t.tag_ == "LS":
+                continue
             return True
-    # First content word is base-form verb (imperative)
-    first = tokens[0]
-    if first.pos_ == "VERB" and first.tag_ in {"VB", "VBP"}:
+        return False
+
+    # "Do not open..." / "Do the test..."
+    if root.pos_ == "VERB" and root.tag_ in {"VB", "VBP"} and not _has_subject(root):
         return True
-    # Conditional-first: "... , set the switch" — look for imperative after comma
+    # First content word is base-form verb (imperative)
+    for first in tokens:
+        if first.tag_ == "LS":
+            continue
+        if first.pos_ == "VERB" and first.tag_ in {"VB", "VBP"} and not _has_subject(first):
+            return True
+        break
+    # Conditional-first: "... , set the switch"
     for token in tokens:
-        if token.dep_ == "ROOT" and token.pos_ == "VERB" and token.tag_ in {"VB", "VBP"}:
+        if (
+            token.dep_ == "ROOT"
+            and token.pos_ == "VERB"
+            and token.tag_ in {"VB", "VBP"}
+            and not _has_subject(token)
+        ):
             return True
     return False
 

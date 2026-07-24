@@ -15,7 +15,7 @@ RULE_UNITS = "STE-UNITS-FORMAT"
 _GLUED_UNIT = re.compile(
     r"(?P<num>\d+(?:\.\d+)?)\s*(?P<unit>mm|cm|m|km|µm|um|nm|kg|g|mg|"
     r"l|L|ml|mL|Hz|kHz|MHz|V|mV|kV|A|mA|W|kW|Pa|kPa|MPa|bar|psi|"
-    r"°C|degC|°F|N|Nm|rpm)\b",
+    r"°C|degC|°F|C|F|N|Nm|rpm)\b",
     re.IGNORECASE,
 )
 

@@ -78,8 +78,8 @@
       "id": "pdf-leak-test",
       "non_ste": "Test the system for leaks.",
       "ste": "Do the leak test of the system.",
-      "expected_rule_ids": ["STE-VOCAB-UNAPPROVED"],
-      "notes": "Adapted from Issue 9; 'test' as verb is unapproved."
+      "expected_rule_ids": ["STE-POS-MISMATCH"],
+      "notes": "Adapted from Issue 9; 'test' is approved as noun, not as verb."
     },
     {
       "id": "pdf-operable",
