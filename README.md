@@ -8,7 +8,12 @@ engine.
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 
-![Before/after STE deploy docs](docs/hero-before-after.svg)
+## What changes
+
+| Before | After |
+| --- | --- |
+| Three viable paths, in order of robustness, can be leveraged to facilitate deployment: implement containerized delivery so CI builds and pushes an image and the runtime pulls it; restore the pre-built environment and align infrastructure with the pipeline; or at minimum ensure that templates are synchronized and readiness is polled rather than slept. | Deploy the app with a container image.<br>1. Build the image in CI.<br>2. Push the image to the registry.<br>3. Configure the app to pull that image.<br>4. Do not install packages when the app starts. |
+| Findings include `STE-VOCAB-UNAPPROVED`, `STE-SENTENCE-LENGTH`, `STE-PASSIVE` (and related). | Short imperative steps — one action each. Recheck with `ste100 check`. |
 
 ## Watch the loop
 
@@ -16,7 +21,7 @@ CLI check → rewrite → recheck:
 
 ![CLI demo](docs/demo-cli.gif)
 
-Agent MCP tool loop (Cursor UI capture can replace this later):
+Agent MCP tool loop on the same example (check → rewrite brief → host rewrite → recheck):
 
 ![Agent tool-loop demo](docs/demo-agent-loop.gif)
 
