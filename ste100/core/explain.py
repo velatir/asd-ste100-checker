@@ -73,8 +73,16 @@ def explain_rule(rule_id: str) -> dict[str, Any]:
 
     title = reg.title or (pdf_meta.title if pdf_meta else reg.rule_id)
     description = reg.description
-    if pdf_meta and pdf_meta.summary:
-        description = f"{reg.description} | {pdf_meta.summary[:400]}"
+
+    pdf_rule = None
+    if pdf_meta:
+        pdf_rule = {
+            "rule_id": pdf_meta.rule_id,
+            "section": pdf_meta.section,
+            "title": pdf_meta.title,
+            "summary": None,
+            "text_type": pdf_meta.text_type.value if pdf_meta.text_type else None,
+        }
 
     return {
         "found": True,
@@ -83,17 +91,7 @@ def explain_rule(rule_id: str) -> dict[str, Any]:
         "description": description,
         "default_severity": reg.severity.value,
         "rule_ref": reg.rule_ref,
-        "fix_hints": list(reg.fix_hints),
+        "fix_hints": list(reg.fix_hints)[:3],
         "text_type_scope": reg.text_type_scope,
-        "pdf_rule": (
-            {
-                "rule_id": pdf_meta.rule_id,
-                "section": pdf_meta.section,
-                "title": pdf_meta.title,
-                "summary": pdf_meta.summary,
-                "text_type": pdf_meta.text_type.value if pdf_meta.text_type else None,
-            }
-            if pdf_meta
-            else None
-        ),
+        "pdf_rule": pdf_rule,
     }

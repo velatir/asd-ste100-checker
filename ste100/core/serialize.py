@@ -9,24 +9,70 @@ from ste100.core.schema import AnalysisResult, Finding, Severity
 from ste100.rules.registry import get_rule_meta
 
 
-def to_json(result: AnalysisResult, *, as_string: bool = False) -> dict[str, Any] | str:
+def _compact_severity_rank(severity: Severity) -> int:
+    if severity is Severity.ERROR:
+        return 0
+    if severity is Severity.WARNING:
+        return 1
+    if severity is Severity.INFO:
+        return 2
+    _exhaustive: Never = severity
+    raise AssertionError(f"Unhandled Severity: {_exhaustive}")
+
+
+def to_json(
+    result: AnalysisResult,
+    *,
+    as_string: bool = False,
+    compact: bool = False,
+    max_findings: int | None = None,
+) -> dict[str, Any] | str:
     """Serialize AnalysisResult to a JSON-compatible dict (or JSON string)."""
-    payload = result.model_dump(mode="json")
+    if compact:
+        findings = sorted(
+            result.findings,
+            key=lambda f: (_compact_severity_rank(f.severity), f.start, f.end, f.rule_id),
+        )
+        if max_findings is not None and max_findings >= 0:
+            findings = findings[:max_findings]
+        payload: dict[str, Any] = {
+            "text_type": result.text_type.value,
+            "compliant": result.compliant,
+            "findings": [[f.rule_id, f.severity.value] for f in findings],
+            "summary": {
+                k: result.summary.get(k, 0) for k in ("error", "warning", "info")
+            },
+        }
+    else:
+        payload = result.model_dump(mode="json")
     if as_string:
         return json.dumps(payload, indent=2, ensure_ascii=False)
     return payload
 
 
-def format_output(result: AnalysisResult, output: str) -> dict[str, Any]:
+def format_output(
+    result: AnalysisResult,
+    output: str,
+    *,
+    verbosity: str = "full",
+    max_findings: int | None = 30,
+) -> dict[str, Any]:
     """Serialize an AnalysisResult as json or sarif (dict form).
 
     Shared by the CLI and MCP adapters so the json/sarif dispatch lives once.
+    ``verbosity='compact'`` returns ``[rule_id, severity]`` finding pairs,
+    errors-first, capped by ``max_findings`` (default 30).
     """
     fmt = (output or "json").strip().lower()
+    compact = verbosity.strip().lower() == "compact"
     if fmt == "sarif":
         return to_sarif(result)
     if fmt == "json":
-        return to_json(result)  # type: ignore[return-value]
+        return to_json(
+            result,
+            compact=compact,
+            max_findings=max_findings if compact else None,
+        )  # type: ignore[return-value]
     raise ValueError(f"Invalid output format {output!r}; expected 'json' or 'sarif'")
 
 

@@ -9,23 +9,19 @@ from typing import Any, Never
 from ste100.core.analyzer import analyze
 from ste100.core.fixes import apply_safe_fixes
 from ste100.core.schema import AnalysisResult, Finding, Severity
-from ste100.core.serialize import to_json
 from ste100.rules.semantic import (
     RULE_POS,
     RULE_PRONOUN,
     RULE_TOPIC,
 )
 
-DEFAULT_MAX_FINDINGS = 20
+DEFAULT_MAX_FINDINGS = 10
 
 TIER3_RULE_IDS = frozenset({RULE_PRONOUN, RULE_TOPIC, RULE_POS})
 
 _BASE_CONSTRAINTS: list[str] = [
-    "Preserve part numbers, serial numbers, document IDs, and software identifiers.",
-    "Preserve numeric values and units (for example 5 mm, 120 °C).",
-    "Preserve Warning / Caution / Note labels and safety-critical conditions.",
-    "Do not claim ASD-STE100 compliance or certification.",
-    "Do not claim the rewrite is compliant until ste_check_text (or equivalent) recheck succeeds.",
+    "Preserve IDs, numbers/units, and Warning/Caution/Note labels.",
+    "Do not claim ASD-STE100 compliance until ste_check_text recheck succeeds.",
 ]
 
 
@@ -55,22 +51,6 @@ def select_findings(
     return ordered[: max(0, max_findings)]
 
 
-def _finding_lines(findings: list[Finding]) -> list[str]:
-    lines: list[str] = []
-    for i, finding in enumerate(findings, start=1):
-        span = finding.evidence.get("text") if isinstance(finding.evidence, dict) else None
-        span_bit = f" span={span!r}" if span else ""
-        sugg = ""
-        if finding.suggestions:
-            alts = ", ".join(s.replacement for s in finding.suggestions[:3])
-            sugg = f" suggestions=[{alts}]"
-        lines.append(
-            f"{i}. [{finding.severity.value}] {finding.rule_id}: {finding.message}"
-            f" (chars {finding.start}-{finding.end}){span_bit}{sugg}"
-        )
-    return lines
-
-
 @dataclass(frozen=True)
 class BriefSpec:
     title: str
@@ -87,64 +67,40 @@ class BriefSpec:
 
 REWRITE_SPEC = BriefSpec(
     title="STE rewrite brief",
-    intro=(
-        "You are rewriting technical text toward ASD-STE100-style Simplified "
-        "Technical English.\nThis checker is unofficial and not affiliated with ASD."
-    ),
-    findings_heading="## Findings to address (priority order)",
-    empty_findings="_No findings in this brief (text may already be clear of ERRORS)._",
+    intro="Rewrite toward ASD-STE100-style STE. Unofficial; not affiliated with ASD.",
+    findings_heading="## Findings (priority)",
+    empty_findings="_No findings in this brief._",
     instructions=[
-        "1. Produce a **minimal** rewrite that clears ERROR findings first.",
-        "2. Prefer finding `suggestions` when present and high-confidence.",
-        "3. Fix WARNINGs when straightforward; otherwise leave with a short rationale.",
-        "4. Prefer short sentences (procedures ≤ 20 words; descriptions ≤ 25 words).",
-        "5. Use approved dictionary alternatives; keep one instruction per procedural sentence.",
-        "6. After you rewrite, the host must recheck with `ste_check_text` "
-        "(or `ste_check_file` / `ste_check_changed_files`).",
+        "1. Minimal rewrite; clear ERRORs first; prefer high-confidence suggestions.",
+        "2. Fix easy WARNINGs; else leave with short rationale.",
+        "3. Short sentences (proc ≤20 / desc ≤25 words); one instruction per procedural sentence.",
+        "4. Host must recheck with ste_check_text after rewrite.",
     ],
     constraints=[
-        *_BASE_CONSTRAINTS[:3],
-        "Change only what findings require; prefer minimal edits over stylistic rewrite.",
-        *_BASE_CONSTRAINTS[3:],
+        *_BASE_CONSTRAINTS,
     ],
-    output=(
-        "Return only the rewritten text (no preamble). "
-        "If you cannot clear an ERROR without changing safety meaning, "
-        "keep the original span and note it separately."
-    ),
+    output="Return only rewritten text.",
     include_safe_fix=True,
 )
 
 SEMANTIC_SPEC = BriefSpec(
     title="STE semantic review brief",
     intro=(
-        "You are reviewing technical text for ASD-STE100-style semantic clarity "
-        "(pronouns, topic sentence, approved part-of-speech use).\n"
-        "This checker is unofficial and not affiliated with ASD."
+        "Judge Tier-3 STE clarity (pronouns, topic sentence, POS). "
+        "Unofficial; not affiliated with ASD."
     ),
-    findings_heading="## Tier-3 findings to judge (priority order)",
+    findings_heading="## Tier-3 findings (priority)",
     empty_findings="_No Tier-3 semantic findings in this brief._",
     instructions=[
-        "1. Judge each Tier-3 finding: fix when clearly warranted; leave with "
-        "a short rationale when the heuristic is a false positive.",
-        "2. Prefer naming the referent noun instead of ambiguous pronouns.",
-        "3. For descriptions, put the topic in the first sentence.",
-        "4. For POS mismatches, use the approved dictionary part of speech "
-        "(or an approved alternative for that sense).",
-        "5. ERROR-level POS mismatches are must-fix (or report unresolved).",
-        "6. After edits, the host must recheck with `ste_check_text` "
-        "(or `ste_check_file` / `ste_check_changed_files`).",
+        "1. Fix clear Tier-3 issues; leave false positives with short rationale.",
+        "2. Name nouns instead of ambiguous pronouns; topic in first descriptive sentence.",
+        "3. POS ERRORs are must-fix; WARNINGs are advisory.",
+        "4. Host must recheck with ste_check_text after edits.",
     ],
     constraints=[
-        *_BASE_CONSTRAINTS[:3],
-        "Change only what semantic findings require; prefer naming nouns over vague pronouns.",
-        *_BASE_CONSTRAINTS[3:],
-        "Treat Tier-3 WARNINGs as advisory judgment calls; escalate POS ERRORs as must-fix.",
+        *_BASE_CONSTRAINTS,
     ],
-    output=(
-        "Return only the revised text (no preamble), or the original text "
-        "unchanged if you leave all findings with rationale separately."
-    ),
+    output="Return only revised text.",
     rule_filter=lambda f: f.rule_id in TIER3_RULE_IDS,
     findings_total_fn=lambda findings: sum(1 for f in findings if f.rule_id in TIER3_RULE_IDS),
 )
@@ -161,10 +117,9 @@ def build_prompt(
         "",
         *spec.intro.split("\n"),
         "",
-        f"**Detected text type:** `{result.text_type.value}`",
-        f"**Compliant (no ERROR findings):** `{result.compliant}`",
-        f"**Summary:** errors={result.summary.get('error', 0)}, "
-        f"warnings={result.summary.get('warning', 0)}, "
+        f"text_type=`{result.text_type.value}` compliant=`{result.compliant}` "
+        f"errors={result.summary.get('error', 0)} "
+        f"warnings={result.summary.get('warning', 0)} "
         f"info={result.summary.get('info', 0)}",
         "",
         "## Source text",
@@ -177,16 +132,25 @@ def build_prompt(
         "",
     ]
     if selected:
-        lines.extend(_finding_lines(selected))
+        lines.append(
+            f"_See `findings` array ({len(selected)} items); address in priority order._"
+        )
     else:
         lines.append(spec.empty_findings)
     lines.extend(["", "## Instructions", ""])
     lines.extend(spec.instructions)
-    lines.extend(["", "## Constraints", ""])
-    for constraint in spec.constraints:
-        lines.append(f"- {constraint}")
     lines.extend(["", "## Output", "", spec.output])
     return "\n".join(lines) + "\n"
+
+
+def _compact_finding(finding: Finding) -> dict[str, Any]:
+    return {
+        "rule_id": finding.rule_id,
+        "severity": finding.severity.value,
+        "start": finding.start,
+        "end": finding.end,
+        "suggestions": [s.replacement for s in finding.suggestions[:1]],
+    }
 
 
 def build_brief(
@@ -195,6 +159,8 @@ def build_brief(
     text_type: str = "auto",
     glossary: str | None = None,
     max_findings: int = DEFAULT_MAX_FINDINGS,
+    *,
+    include_prompt: bool = True,
 ) -> dict[str, Any]:
     """Analyze text and return a prompt-return brief for the host agent."""
     result = analyze(text, text_type=text_type, glossary_path=glossary)
@@ -205,8 +171,12 @@ def build_brief(
     )
     total_fn = spec.findings_total_fn or (lambda fs: len(fs))
     payload: dict[str, Any] = {
-        "findings": [f.model_dump(mode="json") for f in selected],
-        "prompt": build_prompt(text, result, selected, spec),
+        "findings": [_compact_finding(f) for f in selected],
+        "prompt": (
+            build_prompt(text, result, selected, spec)
+            if include_prompt
+            else f"# {spec.title}\n"
+        ),
         "constraints": list(spec.constraints),
         "text_type": result.text_type.value,
         "compliant": result.compliant,
@@ -214,10 +184,16 @@ def build_brief(
         "max_findings": max_findings,
         "findings_total": total_fn(result.findings),
         "findings_included": len(selected),
-        "analysis": to_json(result),
+        "analysis": None,
     }
     if spec.include_safe_fix:
-        payload["safe_fix_preview"] = apply_safe_fixes(text, glossary_path=glossary)
+        preview = apply_safe_fixes(text, glossary_path=glossary)
+        payload["safe_fix_preview"] = {
+            "original": "",
+            "fixed": preview["fixed"],
+            "diff": "",
+            "replacements_applied": preview["replacements_applied"],
+        }
     return payload
 
 
@@ -228,12 +204,20 @@ def suggest_rewrite(
     max_findings: int = DEFAULT_MAX_FINDINGS,
     *,
     include_safe_fix_preview: bool = True,
+    include_prompt: bool = True,
 ) -> dict[str, Any]:
     """Rewrite brief for the host agent (no LLM API)."""
     spec = REWRITE_SPEC
     if not include_safe_fix_preview:
         spec = replace(REWRITE_SPEC, include_safe_fix=False)
-    payload = build_brief(text, spec, text_type, glossary, max_findings)
+    payload = build_brief(
+        text,
+        spec,
+        text_type,
+        glossary,
+        max_findings,
+        include_prompt=include_prompt,
+    )
     if not include_safe_fix_preview:
         payload["safe_fix_preview"] = None
     return payload
@@ -244,9 +228,18 @@ def suggest_semantic_review(
     text_type: str = "auto",
     glossary: str | None = None,
     max_findings: int = DEFAULT_MAX_FINDINGS,
+    *,
+    include_prompt: bool = True,
 ) -> dict[str, Any]:
     """Tier-3 semantic brief for the host agent (no LLM API)."""
-    return build_brief(text, SEMANTIC_SPEC, text_type, glossary, max_findings)
+    return build_brief(
+        text,
+        SEMANTIC_SPEC,
+        text_type,
+        glossary,
+        max_findings,
+        include_prompt=include_prompt,
+    )
 
 
 def filter_tier3_findings(findings: list[Finding]) -> list[Finding]:

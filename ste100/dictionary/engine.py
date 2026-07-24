@@ -312,7 +312,9 @@ class DictionaryEngine:
                 return record
         return None
 
-    def lookup_payload(self, word: str) -> dict[str, Any]:
+    def lookup_payload(
+        self, word: str, *, include_examples: bool = False
+    ) -> dict[str, Any]:
         """CLI/MCP-shaped dictionary lookup payload."""
         record = self.lookup(word)
         if record is None:
@@ -327,6 +329,10 @@ class DictionaryEngine:
         payload["alternatives"] = self.suggest_alternatives(word) or payload.get(
             "alternatives", []
         )
+        if not include_examples:
+            payload["examples_ste"] = []
+            payload["examples_non_ste"] = []
+            payload["notes"] = None
         return payload
 
     def is_approved(self, word: str, pos: str | None = None) -> bool:

@@ -22,18 +22,7 @@ TransportName = Literal["stdio", "http", "sse", "streamable-http"]
 
 mcp = FastMCP(
     name="asd-ste100-checker",
-    instructions=(
-        "Unofficial ASD-STE100 Simplified Technical English checker. "
-        "Not affiliated with ASD. Use ste_check_text / ste_check_file for diagnostics, "
-        "ste_lookup_word for dictionary lookup, ste_explain_finding for rule metadata, "
-        "ste_apply_safe_fixes for 1:1 synonym fixes, "
-        "ste_suggest_rewrite for a host-agent rewrite brief (no LLM API), "
-        "ste_suggest_semantic_review for Tier-3 semantic findings brief (no LLM API), "
-        "and ste_check_changed_files for working-tree / branch-vs-base doc changes. "
-        "Set STE100_SPACY_MODEL before starting the server to choose a spaCy model. "
-        "Relative file/glossary paths require STE100_WORKSPACE (absolute root). "
-        "HTTP/SSE requires STE100_MCP_TOKEN (Bearer)."
-    ),
+    instructions="Unofficial ASD-STE100 checker. See skill for workflow.",
 )
 
 
@@ -61,11 +50,12 @@ def ste_check_text(
     text_type: str = "auto",
     glossary: str | None = None,
     output: str = "json",
+    verbosity: str = "compact",
 ) -> dict[str, Any]:
-    """Check technical text and return structured STE diagnostics."""
+    """Check pasted text; return STE diagnostics (json/sarif)."""
     glossary_path = resolve_optional_user_path(glossary)
     result = analyze(text, text_type=text_type, glossary_path=glossary_path)
-    return format_output(result, output)
+    return format_output(result, output, verbosity=verbosity)
 
 
 @mcp.tool()
@@ -74,29 +64,39 @@ def ste_check_file(
     text_type: str = "auto",
     glossary: str | None = None,
     output: str = "json",
+    verbosity: str = "compact",
 ) -> dict[str, Any]:
-    """Check a file on disk and return structured STE diagnostics.
-
-    Absolute paths are used as-is. Relative paths resolve under
-    ``STE100_WORKSPACE``.
-    """
+    """Check a file; relative paths need STE100_WORKSPACE."""
     file_path = resolve_user_path(path)
     glossary_path = resolve_optional_user_path(glossary)
     text = file_path.read_text(encoding="utf-8")
     result = analyze(text, text_type=text_type, glossary_path=glossary_path)
-    return format_output(result, output)
+    return format_output(result, output, verbosity=verbosity)
 
 
 @mcp.tool()
-def ste_lookup_word(word: str) -> dict[str, Any]:
-    """Return status, meaning, alternatives, inflections, and rule_ref for a word."""
-    return get_default_engine().lookup_payload(word)
+def ste_lookup_word(word: str, include_examples: bool = False) -> dict[str, Any]:
+    """Look up STE dictionary status and alternatives for a word."""
+    return get_default_engine().lookup_payload(word, include_examples=include_examples)
 
 
 @mcp.tool()
 def ste_apply_safe_fixes(text: str, glossary: str | None = None) -> dict[str, Any]:
-    """Apply only unambiguous 1:1 synonym replacements; return text + diff."""
-    return apply_safe_fixes(text, glossary_path=resolve_optional_user_path(glossary))
+    """Apply unambiguous 1:1 synonym replacements only."""
+    result = apply_safe_fixes(text, glossary_path=resolve_optional_user_path(glossary))
+    slim_replacements = [
+        {"from": r["from"], "to": r["to"]}
+        for r in result["replacements_applied"]
+    ]
+    fixed = result["fixed"]
+    if len(fixed) > 400:
+        fixed = fixed[:400] + "…"
+    return {
+        "original": "",
+        "fixed": fixed,
+        "diff": "",
+        "replacements_applied": slim_replacements,
+    }
 
 
 @mcp.tool()
@@ -104,20 +104,18 @@ def ste_suggest_rewrite(
     text: str,
     text_type: str = "auto",
     glossary: str | None = None,
-    max_findings: int = 20,
+    max_findings: int = 10,
+    include_safe_fix_preview: bool = False,
+    include_prompt: bool = False,
 ) -> dict[str, Any]:
-    """Return a structured rewrite brief (prompt + findings) for the host agent.
-
-    Runs analyze() internally. Does not call any LLM provider API — the host
-    LLM should use ``prompt`` to rewrite, then recheck with ste_check_text.
-    Includes ``safe_fix_preview`` of unambiguous 1:1 synonym fixes without
-    applying them unless the host separately calls ste_apply_safe_fixes.
-    """
+    """Build rewrite brief for host agent (no LLM API); then recheck."""
     return suggest_rewrite(
         text,
         text_type=text_type,
         glossary=resolve_optional_user_path(glossary),
         max_findings=max_findings,
+        include_safe_fix_preview=include_safe_fix_preview,
+        include_prompt=include_prompt,
     )
 
 
@@ -126,19 +124,16 @@ def ste_suggest_semantic_review(
     text: str,
     text_type: str = "auto",
     glossary: str | None = None,
-    max_findings: int = 20,
+    max_findings: int = 10,
+    include_prompt: bool = False,
 ) -> dict[str, Any]:
-    """Return a Tier-3 semantic review brief (prompt + findings) for the host agent.
-
-    Filters pronoun / topic-sentence / POS-mismatch findings. Does not call any
-    LLM provider API — the host judges WARNINGs, clears POS ERRORs, then rechecks.
-    Semantic WARNINGs alone do not make ``compliant`` false.
-    """
+    """Build Tier-3 semantic brief for host judgment (no LLM API)."""
     return suggest_semantic_review(
         text,
         text_type=text_type,
         glossary=resolve_optional_user_path(glossary),
         max_findings=max_findings,
+        include_prompt=include_prompt,
     )
 
 
@@ -150,12 +145,7 @@ def ste_check_changed_files(
     output: str = "json",
     base: str | None = None,
 ) -> dict[str, Any]:
-    """Check locally changed doc files for STE issues.
-
-    Default: working tree vs HEAD (staged + unstaged + untracked).
-    With ``base`` (branch/ref): files changed vs ``git merge-base HEAD <base>``.
-    Filters by globs (default: *.md, *.txt, *.rst, *.adoc). Requires a git repo.
-    """
+    """Check git-changed docs vs HEAD or merge-base(base); default globs md/txt/rst/adoc."""
     fmt = (output or "json").strip().lower()
     try:
         return run_check_changed(
@@ -177,7 +167,7 @@ def ste_check_changed_files(
 
 @mcp.tool()
 def ste_explain_finding(rule_id: str) -> dict[str, Any]:
-    """Explain a checker rule_id (title, severity, STE ref, fix hints, PDF rule)."""
+    """Explain a rule_id (severity, STE ref, fix hints)."""
     return explain_rule(rule_id)
 
 
