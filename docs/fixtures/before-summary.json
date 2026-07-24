@@ -1,0 +1,18 @@
+{
+  "compliant": false,
+  "text_type": "procedure",
+  "summary": {
+    "total": 33,
+    "error": 27,
+    "warning": 6,
+    "info": 0
+  },
+  "rules": [
+    "STE-ONE-INSTRUCTION",
+    "STE-PASSIVE",
+    "STE-POS-MISMATCH",
+    "STE-PRONOUN-AMBIG",
+    "STE-SENTENCE-LENGTH",
+    "STE-VOCAB-UNAPPROVED"
+  ]
+}

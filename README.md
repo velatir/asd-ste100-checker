@@ -1,14 +1,35 @@
 # asd-ste100-checker
 
-> **Unofficial — not affiliated with, endorsed by, or sponsored by ASD.**
-> ASD-STE100 is a registered European Union Trade Mark (No. 017966390).
-> This project is an independent tool and makes no claim of official compliance
-> or certification.
-
 An open-source **Simplified Technical English (ASD-STE100)** writing checker
-for LLM coding agents. It ships as a thin agent skill, an MCP server
-(stdio + HTTP/SSE), a thin diagnostics LSP, and a deterministic Python analysis
+for LLM coding agents — thin skill + MCP + LSP over a deterministic Python
 engine.
+
+[![CI](https://github.com/sourdough-bread/asd-ste100-checker/actions/workflows/ci.yml/badge.svg)](https://github.com/sourdough-bread/asd-ste100-checker/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+
+![Before/after STE deploy docs](docs/hero-before-after.svg)
+
+## Watch the loop
+
+CLI check → rewrite → recheck:
+
+![CLI demo](docs/demo-cli.gif)
+
+Agent MCP tool loop (Cursor UI capture can replace this later):
+
+![Agent tool-loop demo](docs/demo-agent-loop.gif)
+
+> **Unofficial** — not affiliated with, endorsed by, or sponsored by ASD.
+> Full trademark / compliance notice: [Disclaimer](#disclaimer).
+
+## 30-second try
+
+```bash
+uvx --from asd-ste100-checker ste100 setup
+uvx --from asd-ste100-checker ste100 check docs/fixtures/before.txt --text-type procedure
+uvx --from asd-ste100-checker ste100 check docs/fixtures/after.txt --text-type procedure
+```
 
 ## Install
 
@@ -65,7 +86,8 @@ Images and PyPI packages publish on tagged releases (`v*`) once OIDC trusted
 publishing (PyPI) and GHCR permissions are configured. This repo does not push
 tags for you — create a GitHub release / push a `v*` tag when ready.
 
-### spaCy model
+<details>
+<summary>spaCy model</summary>
 
 Default model: `en_core_web_sm`.
 
@@ -80,14 +102,17 @@ is missing (no runtime auto-download inside MCP tool calls).
 
 CI and the default install stay on `en_core_web_sm`.
 
-### Path resolution (MCP)
+</details>
+
+<details>
+<summary>Path resolution (MCP)</summary>
 
 - **Absolute** paths are used as-is (`ste_check_file`, glossary args).
 - **Relative** paths require `STE100_WORKSPACE` (absolute workspace root).
 
+</details>
+
 ## Quickstart
-
-
 
 ### CLI
 
@@ -118,8 +143,6 @@ ste100 check-changed --base main
 cat manual.txt | ste100 check -
 ```
 
-
-
 ### MCP server (stdio)
 
 Prefer `uvx` as above, or:
@@ -138,8 +161,6 @@ Prefer `uvx` as above, or:
   }
 }
 ```
-
-
 
 ### MCP server (HTTP / streamable)
 
@@ -191,8 +212,6 @@ Generic language-client stub (Cursor / VS Code style):
 }
 ```
 
-
-
 ### MCP tool catalog
 
 - `ste_check_text(text, text_type="auto", glossary=None, output="json")`
@@ -204,8 +223,6 @@ Generic language-client stub (Cursor / VS Code style):
 - `ste_suggest_semantic_review(...)` — Tier-3 brief; **no LLM API in MCP**
 - `ste_check_changed_files(globs=None, text_type="auto", glossary=None, output="json", base=None)` —
 working tree vs `HEAD`, or vs `git merge-base HEAD <base>` when `base` is set
-
-
 
 ## Edge-case gate
 
@@ -251,7 +268,12 @@ includes `confidence`, `parse_cue`, `text_type`, and `rule_ref`.
 | `STE-POS-MISMATCH`   | both        | WARNING (ERROR if high-conf) | Approved dictionary POS vs spaCy usage; skips TN/TV and unapproved.               |
 
 
+## Disclaimer
 
+> **Unofficial — not affiliated with, endorsed by, or sponsored by ASD.**
+> ASD-STE100 is a registered European Union Trade Mark (No. 017966390).
+> This project is an independent tool and makes no claim of official compliance
+> or certification.
 
 ## Dictionary data and redistribution
 
@@ -277,8 +299,6 @@ Four surfaces on one deterministic engine:
 LLM agent (skill)  ->  MCP (stdio|HTTP)  ->  deterministic engine
 Editor             ->  LSP (stdio)       ->  deterministic engine
 ```
-
-
 
 ## Packaging
 

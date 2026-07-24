@@ -1,0 +1,5 @@
+Deploy the app with a container image.
+1. Build the image in CI.
+2. Push the image to the registry.
+3. Configure the app to pull that image.
+4. Do not install packages when the app starts.

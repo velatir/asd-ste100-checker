@@ -1,0 +1,17 @@
+[
+  {
+    "rule_id": "STE-SENTENCE-LENGTH",
+    "severity": "error",
+    "message": "Sentence has 54 words; maximum for procedure text is 20 (Rule 2.2)."
+  },
+  {
+    "rule_id": "STE-VOCAB-UNAPPROVED",
+    "severity": "error",
+    "message": "Word 'viable' is not in the approved STE dictionary."
+  },
+  {
+    "rule_id": "STE-PASSIVE",
+    "severity": "warning",
+    "message": "Prefer active voice in procedures; rewrite this passive construction ('synchronized') (Rule 3.6)."
+  }
+]

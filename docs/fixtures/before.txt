@@ -1,0 +1,1 @@
+Three viable paths, in order of robustness, can be leveraged to facilitate deployment: implement containerized delivery so CI builds and pushes an image and the runtime pulls it; restore the pre-built environment and align infrastructure with the pipeline; or at minimum ensure that templates are synchronized and readiness is polled rather than slept.

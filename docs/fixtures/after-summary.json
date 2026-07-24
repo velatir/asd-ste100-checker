@@ -1,0 +1,13 @@
+{
+  "compliant": false,
+  "text_type": "procedure",
+  "summary": {
+    "total": 11,
+    "error": 11,
+    "warning": 0,
+    "info": 0
+  },
+  "rules": [
+    "STE-VOCAB-UNAPPROVED"
+  ]
+}
