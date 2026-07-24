@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "asd-ste100-checker"
+version = "1.0.0"
+description = "Unofficial ASD-STE100 Simplified Technical English writing checker for LLM coding agents (MCP server + deterministic engine)."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.11"
+authors = [{ name = "ASD-STE100 Checker Contributors" }]
+keywords = ["ste", "simplified-technical-english", "asd-ste100", "technical-writing", "mcp", "llm", "lsp"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Text Processing :: Linguistic",
+    "Topic :: Software Development :: Quality Assurance",
+    "Typing :: Typed",
+]
+dependencies = [
+    "spacy",
+    "fastmcp",
+    "pymupdf",
+    "pyyaml",
+    "pydantic>=2",
+    "click",
+    "rich",
+    "pygls>=1.3",
+    "lsprotocol",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+]
+
+[project.scripts]
+ste100 = "ste100.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ste100*"]
+
+[tool.setuptools.package-data]
+ste100 = ["dictionary/data/*.json", "dictionary/data/*.md", "dictionary/data/**/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.coverage.run]
+branch = true
+source = ["ste100"]
