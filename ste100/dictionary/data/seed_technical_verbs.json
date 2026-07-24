@@ -1,0 +1,11 @@
+{
+  "description": "Seed technical verbs (STE categories) for common procedure verbs missing from the curated alpha dictionary as approved/TV forms. Unofficial — not affiliated with ASD.",
+  "technical_verbs": [
+    {"word": "calibrate", "category": "measurement", "approved_meaning": "Technical verb: calibrate an instrument.", "inflections": ["calibrates", "calibrated", "calibrating"]},
+    {"word": "torque", "category": "assembly", "approved_meaning": "Technical verb: apply torque.", "inflections": ["torques", "torqued", "torquing"]},
+    {"word": "troubleshoot", "category": "maintenance", "approved_meaning": "Technical verb: troubleshoot a fault.", "inflections": ["troubleshoots", "troubleshot", "troubleshooting"]},
+    {"word": "upload", "category": "computer", "approved_meaning": "Technical verb: upload data.", "inflections": ["uploads", "uploaded", "uploading"]},
+    {"word": "download", "category": "computer", "approved_meaning": "Technical verb: download data.", "inflections": ["downloads", "downloaded", "downloading"]},
+    {"word": "log", "category": "computer", "approved_meaning": "Technical verb: log data or events.", "inflections": ["logs", "logged", "logging"]}
+  ]
+}
