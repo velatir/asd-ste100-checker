@@ -1,17 +1,20 @@
-"""Sentence-level rules: length limits and one instruction per procedural sentence."""
+"""Sentence-level rules: length, one instruction, semicolons, contractions."""
 
 from __future__ import annotations
 
+import re
 from typing import Never
 
 from spacy.tokens import Doc, Span, Token
 
-from ste100.core.schema import Finding, Severity, TextType
+from ste100.core.schema import Finding, Severity, Suggestion, TextType
 from ste100.rules.context import AnalysisContext
 from ste100.rules.spacy_util import sentence_index
 
 RULE_LENGTH = "STE-SENTENCE-LENGTH"
 RULE_ONE_INSTRUCTION = "STE-ONE-INSTRUCTION"
+RULE_SEMICOLON = "STE-SEMICOLON"
+RULE_CONTRACTION = "STE-CONTRACTION"
 
 PROCEDURE_MAX_WORDS = 20
 DESCRIPTION_MAX_WORDS = 25
@@ -158,6 +161,86 @@ def check_one_instruction(doc: Doc, context: AnalysisContext) -> list[Finding]:
                     "imperative_verbs": [t.text for t in verbs],
                 },
                 suggestions=[],
+            )
+        )
+    return findings
+
+
+def check_semicolons(doc: Doc, context: AnalysisContext) -> list[Finding]:
+    """STE prohibits semicolons — use separate sentences (Rule 7.1)."""
+    findings: list[Finding] = []
+    text = context.text
+    for match in re.finditer(r";", text):
+        findings.append(
+            Finding(
+                rule_id=RULE_SEMICOLON,
+                severity=Severity.ERROR,
+                message="Semicolons are not permitted in STE; use separate sentences.",
+                start=match.start(),
+                end=match.end(),
+                sentence=None,
+                evidence={"rule_ref": "Rule 7.1"},
+                suggestions=[
+                    Suggestion(replacement=". ", confidence=0.7, automatic=False),
+                ],
+            )
+        )
+    return findings
+
+
+_CONTRACTION_PATTERN = re.compile(
+    r"\b("
+    r"don't|doesn't|didn't|won't|wouldn't|can't|couldn't|shouldn't|"
+    r"isn't|aren't|wasn't|weren't|hasn't|haven't|hadn't|"
+    r"it's|he's|she's|that's|there's|here's|who's|what's|"
+    r"I'm|I've|I'll|I'd|we're|we've|we'll|we'd|"
+    r"they're|they've|they'll|they'd|you're|you've|you'll|you'd|"
+    r"let's|ain't"
+    r")\b",
+    re.IGNORECASE,
+)
+
+_CONTRACTION_EXPANSIONS: dict[str, str] = {
+    "don't": "do not", "doesn't": "does not", "didn't": "did not",
+    "won't": "will not", "wouldn't": "would not",
+    "can't": "cannot", "couldn't": "could not", "shouldn't": "should not",
+    "isn't": "is not", "aren't": "are not",
+    "wasn't": "was not", "weren't": "were not",
+    "hasn't": "has not", "haven't": "have not", "hadn't": "had not",
+    "it's": "it is", "he's": "he is", "she's": "she is",
+    "that's": "that is", "there's": "there is", "here's": "here is",
+    "who's": "who is", "what's": "what is",
+    "i'm": "I am", "i've": "I have", "i'll": "I will", "i'd": "I would",
+    "we're": "we are", "we've": "we have", "we'll": "we will", "we'd": "we would",
+    "they're": "they are", "they've": "they have",
+    "they'll": "they will", "they'd": "they would",
+    "you're": "you are", "you've": "you have",
+    "you'll": "you will", "you'd": "you would",
+    "let's": "let us", "ain't": "is not",
+}
+
+
+def check_contractions(doc: Doc, context: AnalysisContext) -> list[Finding]:
+    """STE prohibits contractions — use the full form."""
+    findings: list[Finding] = []
+    text = context.text
+    for match in _CONTRACTION_PATTERN.finditer(text):
+        contraction = match.group(0)
+        expansion = _CONTRACTION_EXPANSIONS.get(contraction.lower(), contraction)
+        if contraction[0].isupper() and not expansion[0].isupper():
+            expansion = expansion[0].upper() + expansion[1:]
+        findings.append(
+            Finding(
+                rule_id=RULE_CONTRACTION,
+                severity=Severity.WARNING,
+                message=f"Contraction '{contraction}' is not permitted in STE; use '{expansion}'.",
+                start=match.start(),
+                end=match.end(),
+                sentence=None,
+                evidence={"rule_ref": "Rule 1.5", "contraction": contraction},
+                suggestions=[
+                    Suggestion(replacement=expansion, confidence=0.95, automatic=True),
+                ],
             )
         )
     return findings
