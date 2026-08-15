@@ -2,6 +2,16 @@ name: software-engineering
 
 technical_nouns:
   # Infrastructure
+  - word: server
+    approved_meaning: "A computer or process that provides services to clients."
+  - word: client
+    approved_meaning: "A computer or process that requests services from a server."
+  - word: host
+    approved_meaning: "A machine that runs services or applications."
+  - word: instance
+    approved_meaning: "A single running copy of a service or resource."
+  - word: environment
+    approved_meaning: "A set of infrastructure where software runs (dev, staging, prod)."
   - word: cluster
     approved_meaning: "A group of servers that work as one system."
   - word: node
