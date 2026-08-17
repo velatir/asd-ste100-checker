@@ -77,6 +77,7 @@ class AnalysisResult(BaseModel):
     compliant: bool
     findings: list[Finding] = []
     summary: dict = {}
+    score: float = 1.0
 
 
 class DictionaryRecord(BaseModel):

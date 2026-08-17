@@ -11,7 +11,13 @@ from ste100.rules.semantic import (
     check_pronoun_ambiguity,
     check_topic_sentence,
 )
-from ste100.rules.sentence import check_one_instruction, check_sentence_length
+from ste100.rules.nominalization import check_nominalizations
+from ste100.rules.sentence import (
+    check_contractions,
+    check_one_instruction,
+    check_semicolons,
+    check_sentence_length,
+)
 from ste100.rules.structural import check_units_format
 from ste100.rules.syntax import (
     check_imperative,
@@ -203,6 +209,36 @@ RULES: dict[str, RuleRegistration] = {
             "Use the approved part of speech.",
             "Rewrite with an approved alternative for the intended sense.",
         ),
+        text_type_scope="both",
+    ),
+    "STE-SEMICOLON": RuleRegistration(
+        rule_id="STE-SEMICOLON",
+        check=check_semicolons,
+        severity=Severity.ERROR,
+        description="Semicolons are not permitted in STE; use separate sentences.",
+        title="No semicolons",
+        rule_ref="Rule 7.1",
+        fix_hints=("Replace the semicolon with a period and start a new sentence.",),
+        text_type_scope="both",
+    ),
+    "STE-CONTRACTION": RuleRegistration(
+        rule_id="STE-CONTRACTION",
+        check=check_contractions,
+        severity=Severity.WARNING,
+        description="Contractions are not permitted in STE; use the full form.",
+        title="No contractions",
+        rule_ref="Rule 1.5",
+        fix_hints=("Expand the contraction to its full form.",),
+        text_type_scope="both",
+    ),
+    "STE-NOMINALIZATION": RuleRegistration(
+        rule_id="STE-NOMINALIZATION",
+        check=check_nominalizations,
+        severity=Severity.WARNING,
+        description="Prefer the verb form over noun+light-verb (Rule 3.7).",
+        title="Nominalization",
+        rule_ref="Rule 3.7",
+        fix_hints=("Use the verb directly instead of noun + light verb.",),
         text_type_scope="both",
     ),
 }

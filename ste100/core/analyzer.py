@@ -119,6 +119,20 @@ def _parse_text_type(text_type: TextType | str) -> TextType:
     )
 
 
+_SCORE_WEIGHTS = {
+    Severity.ERROR: 1.0,
+    Severity.WARNING: 0.5,
+    Severity.INFO: 0.1,
+}
+
+
+def _compliance_score(findings: list[Finding], sentence_count: int) -> float:
+    """Compliance score in [0, 1]. Higher = more compliant."""
+    penalty = sum(_SCORE_WEIGHTS.get(f.severity, 0.5) for f in findings)
+    denominator = max(sentence_count, 1)
+    return max(0.0, round(1.0 - penalty / denominator, 3))
+
+
 def _summary(findings: list[Finding]) -> dict[str, int]:
     counts = {
         "total": len(findings),
@@ -165,9 +179,12 @@ def analyze(
 
     summary = _summary(findings)
     compliant = summary["error"] == 0
+    sentence_count = len(list(doc.sents))
+    score = _compliance_score(findings, sentence_count)
     return AnalysisResult(
         text_type=resolved,
         compliant=compliant,
         findings=findings,
         summary=summary,
+        score=score,
     )

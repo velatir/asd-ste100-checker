@@ -1,0 +1,271 @@
+name: software-engineering
+
+technical_nouns:
+  # Infrastructure
+  - word: server
+    approved_meaning: "A computer or process that provides services to clients."
+  - word: client
+    approved_meaning: "A computer or process that requests services from a server."
+  - word: host
+    approved_meaning: "A machine that runs services or applications."
+  - word: instance
+    approved_meaning: "A single running copy of a service or resource."
+  - word: environment
+    approved_meaning: "A set of infrastructure where software runs (dev, staging, prod)."
+  - word: cluster
+    approved_meaning: "A group of servers that work as one system."
+  - word: node
+    approved_meaning: "A single server in a cluster."
+  - word: pod
+    approved_meaning: "The smallest deployable unit in Kubernetes."
+  - word: container
+    approved_meaning: "An isolated process that runs an application image."
+  - word: namespace
+    approved_meaning: "A logical partition within a cluster."
+  - word: ingress
+    approved_meaning: "A Kubernetes resource that routes external traffic to services."
+  - word: sidecar
+    approved_meaning: "A secondary container that runs alongside the main container in a pod."
+  - word: manifest
+    approved_meaning: "A YAML or JSON file that declares Kubernetes resources."
+  - word: replica
+    approved_meaning: "A copy of a pod that runs in parallel for availability."
+  - word: daemon
+    approved_meaning: "A background process that runs without user interaction."
+
+  # Backend
+  - word: API
+    approved_meaning: "Application programming interface."
+  - word: endpoint
+    approved_meaning: "A URL path that accepts API requests."
+  - word: schema
+    approved_meaning: "The structure definition for data or a database."
+  - word: middleware
+    approved_meaning: "Software that runs between a request and a response handler."
+  - word: controller
+    approved_meaning: "A component that handles incoming requests and returns responses."
+  - word: handler
+    approved_meaning: "A function that processes a specific type of request or event."
+  - word: serializer
+    approved_meaning: "A component that converts objects to and from a wire format."
+  - word: payload
+    approved_meaning: "The data content of a request or response."
+  - word: webhook
+    approved_meaning: "An HTTP callback that sends data when an event occurs."
+  - word: ORM
+    approved_meaning: "Object-relational mapping library."
+
+  # Frontend
+  - word: component
+    approved_meaning: "A reusable UI element."
+  - word: prop
+    approved_meaning: "A value passed from a parent component to a child component."
+  - word: DOM
+    approved_meaning: "Document Object Model, the browser's internal page structure."
+  - word: route
+    approved_meaning: "A URL path that maps to a page or view."
+  - word: layout
+    approved_meaning: "The arrangement of visual elements on a page."
+  - word: widget
+    approved_meaning: "A self-contained UI control."
+  - word: viewport
+    approved_meaning: "The visible area of a web page in the browser window."
+
+  # DevOps
+  - word: pipeline
+    approved_meaning: "A sequence of automated steps that build, test, and deploy code."
+  - word: artifact
+    approved_meaning: "A file produced by a build step."
+  - word: registry
+    approved_meaning: "A storage service for container images or packages."
+  - word: helm
+    approved_meaning: "A package manager for Kubernetes."
+    inflections: [Helm]
+  - word: kustomize
+    approved_meaning: "A tool that customizes Kubernetes YAML without templates."
+    inflections: [Kustomize]
+  - word: terraform
+    approved_meaning: "An infrastructure-as-code tool."
+    inflections: [Terraform]
+  - word: flux
+    approved_meaning: "A GitOps tool that reconciles cluster state from Git."
+    inflections: [Flux]
+  - word: rollback
+    approved_meaning: "The act of reverting to a previous version."
+  - word: canary
+    approved_meaning: "A deployment that receives a small fraction of traffic for testing."
+  - word: CI
+    approved_meaning: "Continuous integration."
+  - word: CD
+    approved_meaning: "Continuous delivery or continuous deployment."
+
+  # Data
+  - word: database
+    approved_meaning: "A system that stores and retrieves structured data."
+  - word: query
+    approved_meaning: "A request that reads or changes data in a database."
+  - word: index
+    approved_meaning: "A data structure that speeds up database lookups."
+  - word: cache
+    approved_meaning: "A fast temporary store for frequently accessed data."
+  - word: queue
+    approved_meaning: "A data structure that processes items in order."
+  - word: stream
+    approved_meaning: "A continuous flow of data records."
+  - word: batch
+    approved_meaning: "A group of items processed together."
+  - word: ETL
+    approved_meaning: "Extract, transform, load: a data processing pattern."
+  - word: migration
+    approved_meaning: "A versioned change to a database schema."
+  - word: JSONL
+    approved_meaning: "JSON Lines format: one JSON object per line."
+  - word: JSONB
+    approved_meaning: "A binary JSON storage format in PostgreSQL."
+
+  # Auth
+  - word: token
+    approved_meaning: "A string that proves identity or grants access."
+  - word: JWT
+    approved_meaning: "JSON Web Token: a signed token for authentication."
+  - word: OAuth
+    approved_meaning: "An authorization framework for delegated access."
+  - word: OIDC
+    approved_meaning: "OpenID Connect: an identity layer on top of OAuth."
+  - word: claim
+    approved_meaning: "A key-value pair in a JWT that states a fact about the user."
+  - word: scope
+    approved_meaning: "A permission boundary that limits what a token can access."
+  - word: issuer
+    approved_meaning: "The identity provider that creates and signs tokens."
+  - word: audience
+    approved_meaning: "The intended recipient of a token."
+  - word: credential
+    approved_meaning: "A secret used to prove identity."
+    inflections: [credentials]
+
+  # General development
+  - word: repository
+    approved_meaning: "A storage location for source code and version history."
+  - word: branch
+    approved_meaning: "A named line of development in version control."
+  - word: commit
+    approved_meaning: "A recorded set of changes in version control."
+  - word: diff
+    approved_meaning: "The difference between two versions of a file."
+  - word: PR
+    approved_meaning: "Pull request: a proposal to merge changes."
+  - word: lint
+    approved_meaning: "A tool that checks code for style and correctness errors."
+  - word: fixture
+    approved_meaning: "Test data prepared before a test runs."
+  - word: mock
+    approved_meaning: "A test double that simulates a dependency."
+  - word: stub
+    approved_meaning: "A minimal implementation used in place of a real component."
+  - word: refactor
+    approved_meaning: "To restructure code without changing its behavior."
+  - word: dependency
+    approved_meaning: "An external package or module that a project requires."
+    inflections: [dependencies]
+  - word: runtime
+    approved_meaning: "The environment in which a program executes."
+  - word: SDK
+    approved_meaning: "Software development kit."
+  - word: CLI
+    approved_meaning: "Command-line interface."
+  - word: REPL
+    approved_meaning: "Read-eval-print loop: an interactive code evaluator."
+  - word: codebase
+    approved_meaning: "The complete collection of source code for a project."
+  - word: monorepo
+    approved_meaning: "A single repository that contains multiple projects."
+  - word: worktree
+    approved_meaning: "A separate working directory linked to the same Git repository."
+  - word: hotfix
+    approved_meaning: "An urgent patch applied directly to production."
+  - word: breakpoint
+    approved_meaning: "A marker in code where the debugger pauses execution."
+  - word: stacktrace
+    approved_meaning: "A list of function calls active when an error occurred."
+    inflections: [stack trace]
+
+  # AI / ML
+  - word: LLM
+    approved_meaning: "Large language model."
+  - word: MCP
+    approved_meaning: "Model Context Protocol: a standard for tool integration."
+  - word: prompt
+    approved_meaning: "Text input given to a language model."
+  - word: inference
+    approved_meaning: "The process of generating output from a trained model."
+  - word: embedding
+    approved_meaning: "A numeric vector that represents text meaning."
+    inflections: [embeddings]
+  - word: ONNX
+    approved_meaning: "Open Neural Network Exchange: a model interchange format."
+  - word: tokenizer
+    approved_meaning: "A component that splits text into tokens for a model."
+  - word: harness
+    approved_meaning: "A framework that runs and evaluates models or agents."
+  - word: agent
+    approved_meaning: "An AI system that takes actions based on instructions."
+
+technical_verbs:
+  - word: deploy
+    approved_meaning: "To release software to an environment."
+    inflections: [deploys, deployed, deploying, deployment]
+  - word: merge
+    approved_meaning: "To combine changes from one branch into another."
+    inflections: [merges, merged, merging]
+  - word: rebase
+    approved_meaning: "To replay commits on top of a different base."
+    inflections: [rebases, rebased, rebasing]
+  - word: provision
+    approved_meaning: "To set up infrastructure resources."
+    inflections: [provisions, provisioned, provisioning]
+  - word: serialize
+    approved_meaning: "To convert an object to a wire format."
+    inflections: [serializes, serialized, serializing]
+  - word: deserialize
+    approved_meaning: "To convert a wire format back to an object."
+    inflections: [deserializes, deserialized, deserializing]
+  - word: authenticate
+    approved_meaning: "To verify identity."
+    inflections: [authenticates, authenticated, authenticating]
+  - word: authorize
+    approved_meaning: "To grant permission."
+    inflections: [authorizes, authorized, authorizing]
+  - word: reconcile
+    approved_meaning: "To make actual state match desired state."
+    inflections: [reconciles, reconciled, reconciling]
+  - word: scaffold
+    approved_meaning: "To generate initial project structure."
+    inflections: [scaffolds, scaffolded, scaffolding]
+  - word: bootstrap
+    approved_meaning: "To set up a system from an initial state."
+    inflections: [bootstraps, bootstrapped, bootstrapping]
+  - word: lint
+    approved_meaning: "To check code for errors and style violations."
+    inflections: [lints, linted, linting]
+
+preferred_terms:
+  spin up: start
+  fire up: start
+  kick off: start
+  dive into: read
+  reach out: contact
+  circle back: return
+  take offline: discuss separately
+  double-click on: examine
+  unpack: explain
+  leverage: use
+  utilize: use
+  utilise: use
+  onboard: add
+  offboard: remove
+  sunset: retire
+  greenlight: approve
+  dogfood: test internally
+  productionize: prepare for production
+  harden: strengthen
