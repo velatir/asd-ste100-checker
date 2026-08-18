@@ -1,4 +1,5 @@
 name: software-engineering
+disable_native_glossary: true
 
 technical_nouns:
   # Infrastructure

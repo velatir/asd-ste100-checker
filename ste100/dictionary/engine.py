@@ -342,12 +342,17 @@ class DictionaryEngine:
             return True
         key = _normalize_key(word)
         if key in self.preferred_terms:
-            # Surface form is a dispreferred synonym — not approved as written
             return False
+        if self._native_glossary_disabled:
+            return True
         record = self._index.get(key)
         if record is None:
             return False
         return record.status in _APPROVED_STATUSES
+
+    @property
+    def _native_glossary_disabled(self) -> bool:
+        return self.glossary is not None and self.glossary.disable_native_glossary
 
     def suggest_alternatives(self, word: str) -> list[str]:
         """Return approved alternatives / preferred terms for a word."""
@@ -358,6 +363,8 @@ class DictionaryEngine:
                 preferred = self.preferred_terms[key]
                 if preferred not in suggestions:
                     suggestions.append(preferred)
+            if self._native_glossary_disabled:
+                continue
             record = self._index.get(key)
             if record is not None:
                 for alt in record.alternatives:
@@ -418,8 +425,10 @@ class DictionaryEngine:
         if not isinstance(preferred, dict):
             raise ValueError("preferred_terms must be a mapping of word -> preferred")
         preferred_terms = {str(k): str(v) for k, v in preferred.items()}
+        disable_native = bool(raw.get("disable_native_glossary", False))
         return Glossary(
             name=name,
+            disable_native_glossary=disable_native,
             technical_nouns=nouns,
             technical_verbs=verbs,
             preferred_terms=preferred_terms,
