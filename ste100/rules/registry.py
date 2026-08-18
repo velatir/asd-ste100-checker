@@ -12,6 +12,7 @@ from ste100.rules.semantic import (
     check_topic_sentence,
 )
 from ste100.rules.nominalization import check_nominalizations
+from ste100.rules.phrasal_verb import check_phrasal_verbs
 from ste100.rules.sentence import (
     check_contractions,
     check_one_instruction,
@@ -239,6 +240,22 @@ RULES: dict[str, RuleRegistration] = {
         title="Nominalization",
         rule_ref="Rule 3.7",
         fix_hints=("Use the verb directly instead of noun + light verb.",),
+        text_type_scope="both",
+    ),
+    "STE-PHRASAL-VERB": RuleRegistration(
+        rule_id="STE-PHRASAL-VERB",
+        check=check_phrasal_verbs,
+        severity=Severity.WARNING,
+        description=(
+            "Phrasal verbs create idiomatic meanings the individual words "
+            "do not predict (Rule 9.3)."
+        ),
+        title="Phrasal verb",
+        rule_ref="Rule 9.3",
+        fix_hints=(
+            "Replace the phrasal verb with a single plain verb.",
+            "Example: 'set up' → 'configure', 'find out' → 'determine'.",
+        ),
         text_type_scope="both",
     ),
 }
