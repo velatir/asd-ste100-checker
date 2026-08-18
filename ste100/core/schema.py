@@ -129,6 +129,7 @@ class Glossary(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str
+    disable_native_glossary: bool = False
     technical_nouns: list[GlossaryEntry] = []
     technical_verbs: list[GlossaryEntry] = []
     preferred_terms: dict[str, str] = {}
